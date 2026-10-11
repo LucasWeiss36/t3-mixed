@@ -120,6 +120,7 @@ describe("deriveProviderModelsForDisplay", () => {
         modelOrder: [],
         onModelPreferencesChange: () => undefined,
         onFavoriteModelsChange: () => undefined,
+        onToggleFavorite: () => undefined,
       }),
     );
 
@@ -159,6 +160,7 @@ describe("deriveProviderModelsForDisplay", () => {
       modelOrder: [],
       onModelPreferencesChange: () => undefined,
       onFavoriteModelsChange: () => undefined,
+      onToggleFavorite: () => undefined,
     } as const;
 
     for (const mode of ["list", "editor"] as const) {

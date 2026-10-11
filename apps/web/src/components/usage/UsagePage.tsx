@@ -636,35 +636,31 @@ export function UsagePage() {
                           ? formatCost(merged.costUsd)
                           : formatTokens(merged.totalTokens)}
                       </span>
-                      <span className="text-xs text-muted-foreground">
-                        <span className={figureClass(loading.partial)}>
-                          {formatCount(merged.sessions)} sessions
+                      <span className="inline-flex items-center gap-1 text-xs text-muted-foreground">
+                        <span>
+                          <span className={figureClass(loading.partial)}>
+                            {formatCount(merged.sessions)} sessions
+                          </span>
+                          {metric === "cost" &&
+                            (costUnavailable ? " · costs omitted" : " · API estimate")}
                         </span>
-                        {metric === "cost" && costUnavailable && " · costs omitted"}
-                        {metric === "cost" && !costUnavailable && (
-                          <>
-                            {" · API estimate"}
-                            {merged.costQuality.unpricedShare > 0 && (
-                              <>
-                                {" "}
-                                <Popover>
-                                  <PopoverTrigger
-                                    openOnHover
-                                    render={<InlineButton tone="muted" />}
-                                    aria-label="Unpriced usage details"
-                                  >
-                                    <InfoIcon className="size-3" aria-hidden />
-                                  </PopoverTrigger>
-                                  <PopoverPopup side="top" tooltipStyle>
-                                    API estimate excludes{" "}
-                                    {formatPercent(merged.costQuality.unpricedShare)} unpriced
-                                    records.
-                                  </PopoverPopup>
-                                </Popover>
-                              </>
-                            )}
-                          </>
-                        )}
+                        {metric === "cost" &&
+                          !costUnavailable &&
+                          merged.costQuality.unpricedShare > 0 && (
+                            <Popover>
+                              <PopoverTrigger
+                                openOnHover
+                                render={<InlineButton tone="muted" />}
+                                aria-label="Unpriced usage details"
+                              >
+                                <InfoIcon className="size-3" aria-hidden />
+                              </PopoverTrigger>
+                              <PopoverPopup side="top" tooltipStyle>
+                                API estimate excludes{" "}
+                                {formatPercent(merged.costQuality.unpricedShare)} unpriced records.
+                              </PopoverPopup>
+                            </Popover>
+                          )}
                       </span>
                     </div>
 

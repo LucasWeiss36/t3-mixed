@@ -255,6 +255,7 @@ interface ProviderModelsSectionProps {
     readonly modelOrder: ReadonlyArray<string>;
   }) => void;
   readonly onFavoriteModelsChange: (next: ReadonlyArray<string>) => void;
+  readonly onToggleFavorite: (model: string) => void;
 }
 
 // Only the grip handle starts a drag so the star, switch, and edit controls
@@ -347,6 +348,7 @@ export function ProviderModelsSection({
   onChange,
   onModelPreferencesChange,
   onFavoriteModelsChange,
+  onToggleFavorite,
 }: ProviderModelsSectionProps) {
   const [input, setInput] = useState("");
   const [isAdding, setIsAdding] = useState(false);
@@ -545,11 +547,7 @@ export function ProviderModelsSection({
 
   const handleToggleFavorite = (slug: string) => {
     if (!canWritePreferences) return;
-    onFavoriteModelsChange(
-      favoriteModelSet.has(slug)
-        ? favoriteModels.filter((model) => model !== slug)
-        : [...favoriteModels, slug],
-    );
+    onToggleFavorite(slug);
   };
 
   // `dragHandle` is the sortable activator, `"overlay"` for the lifted copy

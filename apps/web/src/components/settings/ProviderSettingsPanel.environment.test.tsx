@@ -108,6 +108,8 @@ vi.mock("../../hooks/useSettings", () => ({
     settingsState.updateEnvironmentIds.push(environmentId);
     return settingsState.updateSettings;
   },
+  useUpdateEnvironmentModelPreferences: () => settingsState.updateSettings,
+  useToggleEnvironmentModelFavorite: () => () => undefined,
   usePersistEnvironmentProviderInstanceMutation: (environmentId: EnvironmentId) => {
     settingsState.mutationEnvironmentIds.push(environmentId);
     return settingsState.mutateProviderInstance;
@@ -344,29 +346,35 @@ describe("EnvironmentProviderSettings routing", () => {
   });
 
   it.each([
-    ["onFavoriteModelsChange", ["chosen"], { favorites: [{ provider: codexId, model: "chosen" }] }],
+    [
+      "onFavoriteModelsChange",
+      ["chosen"],
+      { setModelFavorites: [{ provider: codexId, model: "chosen", favorite: true }] },
+    ],
     [
       "onModelPreferencesChange",
       { hiddenModels: ["chosen"], modelOrder: ["chosen", "other"] },
       {
-        providerModelPreferences: {
-          [codexId]: { hiddenModels: ["chosen"], modelOrder: ["chosen", "other"] },
-        },
+        setModelsHidden: [{ provider: codexId, model: "chosen", hidden: true }],
+        setProviderModelOrder: { provider: codexId, modelOrder: ["chosen", "other"] },
       },
     ],
-  ])("saves %s on this device without changing the selected server", (action, input, expected) => {
-    atoms.providers = [provider()];
-    const panel = renderPanel();
-    const editor = visitElements(
-      panel,
-      (element) => element.props.instanceId === codexId && element.props.mode === "editor",
-    );
-    expect(editor).not.toBeNull();
-    if (!editor) throw new Error("Provider editor was not rendered");
-    (editor.props[action] as (value: unknown) => void)(input);
-    expect(settingsState.updateClientSettings).toHaveBeenCalledExactlyOnceWith(expected);
-    expect(settingsState.updateSettings).not.toHaveBeenCalled();
-  });
+  ])(
+    "saves %s on the selected environment for every connected client",
+    (action, input, expected) => {
+      atoms.providers = [provider()];
+      const panel = renderPanel();
+      const editor = visitElements(
+        panel,
+        (element) => element.props.instanceId === codexId && element.props.mode === "editor",
+      );
+      expect(editor).not.toBeNull();
+      if (!editor) throw new Error("Provider editor was not rendered");
+      (editor.props[action] as (value: unknown) => void)(input);
+      expect(settingsState.updateSettings).toHaveBeenCalledExactlyOnceWith(expected);
+      expect(settingsState.updateClientSettings).not.toHaveBeenCalled();
+    },
+  );
 
   it("does not substitute another account when the requested instance was removed", () => {
     atoms.providers = [provider()];

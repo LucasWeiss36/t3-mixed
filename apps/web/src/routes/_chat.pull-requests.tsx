@@ -179,7 +179,7 @@ import {
 import { useDebouncedValue } from "../state/queries";
 import { useEnvironmentQuery } from "../state/query";
 import { useAllEnvironmentShellsBootstrapped, useProjects } from "../state/entities";
-import { useEnvironments } from "../state/environments";
+import { useEnvironments, usePrimaryEnvironmentId } from "../state/environments";
 import {
   pullRequestEnvironment,
   usePullRequestList,
@@ -604,6 +604,7 @@ function PullRequestsRouteView() {
   // chosen for writing code and is the reader's scarcest quota; ranking is bulk classification
   // over titles, and it is configurable in Settings for anyone who wants it to be something else.
   const rankingSettings = usePrimarySettings();
+  const rankingEnvironmentId = usePrimaryEnvironmentId();
   const updateRankingSettings = useUpdatePrimarySettings();
   const rankingProviders = useAtomValue(primaryServerProvidersAtom);
   const rankingModel = useMemo(() => {
@@ -2465,6 +2466,7 @@ function PullRequestsRouteView() {
                   they disagree with the order or run that model out of quota. */}
               <span className="ml-auto">
                 <ProviderModelPicker
+                  environmentId={rankingEnvironmentId}
                   activeInstanceId={rankingModel.instanceId}
                   model={rankingModel.model}
                   lockedProvider={null}
