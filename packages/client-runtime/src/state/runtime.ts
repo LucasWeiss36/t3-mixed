@@ -571,7 +571,10 @@ export function createEnvironmentQueryAtomFamily<R, ER, Input, A, E>(
               return Effect.never;
             }
             // Fork: honor the per-query timeout option upstream's rewrite lacks.
-            const query = runInEnvironment(target.environmentId, options.execute(target.input, emit));
+            const query = runInEnvironment(
+              target.environmentId,
+              options.execute(target.input, emit),
+            );
             return options.timeout === undefined
               ? query
               : query.pipe(Effect.timeout(options.timeout));
@@ -780,6 +783,7 @@ export function createEnvironmentRpcCommand<
         readonly input: NoInfer<Input>;
       },
       registry: AtomRegistry.AtomRegistry,
+      result: EnvironmentRpcSuccess<TTag>,
     ) => Effect.Effect<void, never, R>;
     readonly onSettled?: (
       target: {
@@ -808,7 +812,7 @@ export function createEnvironmentRpcCommand<
           authorize: (id, method, payload) =>
             createCommandPermissions(runtime, method).authorize(registry, id, payload),
         }),
-        Effect.tap(() => options.onSuccess?.(target, registry) ?? Effect.void),
+        Effect.tap((result) => options.onSuccess?.(target, registry, result) ?? Effect.void),
         Effect.ensuring(options.onSettled?.(target, registry) ?? Effect.void),
       );
     },

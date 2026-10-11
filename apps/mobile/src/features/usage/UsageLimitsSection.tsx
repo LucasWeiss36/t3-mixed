@@ -40,6 +40,7 @@ const DRIVER_USAGE_KIND: Partial<Record<string, UsageProviderKind>> = {
   cursor: "cursor",
   grok: "grok",
   opencode: "opencode",
+  antigravity: "antigravity",
 };
 
 export function usageKindForDriver(driver: Driver): UsageProviderKind | undefined {

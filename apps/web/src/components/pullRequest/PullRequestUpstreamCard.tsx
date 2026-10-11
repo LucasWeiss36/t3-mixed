@@ -1,6 +1,8 @@
 import { GitBranchPlusIcon, LoaderIcon, SparklesIcon } from "lucide-react";
 import { memo } from "react";
 
+import { sourceControlClients } from "@t3tools/client-runtime/source-control-clients";
+
 import { cn } from "~/lib/utils";
 import { formatRelativeTimeLabel } from "~/timestampFormat";
 
@@ -65,7 +67,7 @@ function PullRequestUpstreamCardImpl({
         event.preventDefault();
         void showPullRequestLinkContextMenu({
           url: entry.url,
-          openLabel: openOnHostLabel(entry.provider),
+          openLabel: openOnHostLabel(sourceControlClients.get(entry.provider)),
           position: { x: event.clientX, y: event.clientY },
         });
       }}

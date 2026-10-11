@@ -16,11 +16,10 @@ import * as GitVcsDriver from "../vcs/GitVcsDriver.ts";
  * The ref a host publishes a change request's head under, which is what makes taking somebody
  * else's commits possible without write access to the repository they live in.
  *
- * Written as a full `Record` so a new provider fails to compile here rather than silently
- * inheriting GitHub's ref layout: the two hosts that publish one spell it differently, and the
- * two that do not have to say so.
+ * A host missing here publishes none, so a new provider is refused rather than silently
+ * inheriting GitHub's ref layout: the hosts that publish one spell it differently.
  */
-const HEAD_REF_TEMPLATE: Record<SourceControlProviderKind, ((n: number) => string) | null> = {
+const HEAD_REF_TEMPLATE: Readonly<Record<string, ((n: number) => string) | null>> = {
   github: (n) => `refs/pull/${n}/head`,
   gitlab: (n) => `refs/merge-requests/${n}/head`,
   bitbucket: null,
@@ -161,7 +160,7 @@ export const make = Effect.gen(function* () {
   const resolveCommits = Effect.fn("UpstreamTake.resolveCommits")(function* (
     input: CherryPickRequest,
   ) {
-    const template = HEAD_REF_TEMPLATE[input.provider];
+    const template = HEAD_REF_TEMPLATE[input.provider] ?? null;
     if (template === null) {
       return yield* fail(
         "This host does not publish a change request's commits to fetch, so they cannot be cherry-picked. Implement the change instead.",

@@ -69,13 +69,14 @@ describe("buildPeriodColumns", () => {
       "2026-08-01",
       {
         day: "2026-08-01",
-        costUsd: 40,
-        totalTokens: 400,
+        costUsd: 45,
+        totalTokens: 450,
         byProvider: new Map([
           ["codex" as const, { costUsd: 10, totalTokens: 100 }],
           ["claude" as const, { costUsd: 20, totalTokens: 200 }],
           ["grok" as const, { costUsd: 7, totalTokens: 70 }],
           ["opencode" as const, { costUsd: 3, totalTokens: 30 }],
+          ["pi" as const, { costUsd: 5, totalTokens: 50 }],
         ]),
       },
     ],
@@ -93,13 +94,13 @@ describe("buildPeriodColumns", () => {
 
   it("plots each day on its own", () => {
     expect(buildPeriodColumns(days, byDay, "cost").map((column) => column.total)).toEqual([
-      40, 0, 5,
+      45, 0, 5,
     ]);
   });
 
   it("reads the requested metric", () => {
     expect(buildPeriodColumns(days, byDay, "tokens").map((column) => column.total)).toEqual([
-      400, 0, 50,
+      450, 0, 50,
     ]);
   });
 
@@ -115,6 +116,7 @@ describe("buildPeriodColumns", () => {
       { provider: "grok", value: 7 },
       { provider: "opencode", value: 3 },
       { provider: "antigravity", value: 0 },
+      { provider: "pi", value: 5 },
     ]);
   });
 

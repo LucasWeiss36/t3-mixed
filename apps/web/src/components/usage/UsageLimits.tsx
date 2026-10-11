@@ -53,6 +53,7 @@ const DRIVER_USAGE_KIND: Partial<Record<string, UsageProviderKind>> = {
   cursor: "cursor",
   grok: "grok",
   opencode: "opencode",
+  antigravity: "antigravity",
 };
 
 /** The series colour the cost chart uses for this driver, so the two views read as one. */

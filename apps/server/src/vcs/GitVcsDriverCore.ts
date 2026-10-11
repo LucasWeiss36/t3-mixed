@@ -2816,6 +2816,9 @@ export const makeGitVcsDriverCore = Effect.fn("makeGitVcsDriverCore")(function* 
       ["rev-parse", "HEAD"],
       true,
     ).pipe(Effect.map((stdout) => stdout.trim()));
+    // After a successful pull, HEAD before and after decides the result, so its output is not
+    // needed. A large fast-forward's diffstat can exceed the output cap, which must not fail a
+    // pull Git applied.
     const upstream = yield* resolveCurrentUpstream(cwd).pipe(Effect.orElseSucceed(() => null));
     const sshAuthentication =
       upstream === null
@@ -2825,6 +2828,7 @@ export const makeGitVcsDriverCore = Effect.fn("makeGitVcsDriverCore")(function* 
       timeoutMs: 30_000,
       fallbackErrorDetail: "git pull failed",
       sshAuthentication,
+      appendTruncationMarker: true,
     });
     const afterSha = yield* runGitStdout(
       "GitVcsDriver.pullCurrentBranch.afterSha",

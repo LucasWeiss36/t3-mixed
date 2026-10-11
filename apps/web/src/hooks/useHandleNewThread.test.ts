@@ -126,6 +126,10 @@ vi.mock("@t3tools/shared/projectSettings", () => ({
     sources: { defaultModelSelection: "environment", defaultThreadEnvMode: "environment" },
     overrides: {},
   }),
+  // The new-project rule has its own tests in projectSettings.test.ts.
+  resolveNewThreadEnvMode: (input: {
+    projectSettings: { settings: { defaultThreadEnvMode: "local" | "worktree" } };
+  }) => input.projectSettings.settings.defaultThreadEnvMode,
 }));
 vi.mock("@t3tools/shared/serverSettings", () => ({
   resolveNewThreadRuntimeMode: (settings: { defaultRuntimeMode?: string }) =>
@@ -180,6 +184,7 @@ vi.mock("../state/entities", () => ({
     },
   ],
   readThreadShell: () => null,
+  readThreadShells: () => [],
   useProjects: () => [],
   useServerConfigs: () => new Map(),
   useThread: () => null,

@@ -1385,6 +1385,7 @@ export const layerServerApi = HttpApiBuilder.group(
         Effect.fn("relay.api.server.updateEnvironmentLabel")(function* (args) {
           const { params, payload } = args;
           const principal = yield* RelayEnvironmentPrincipal;
+          const links = yield* EnvironmentLinks.EnvironmentLinks;
           if (principal.environmentId !== params.environmentId) {
             return yield* new HttpApiError.Unauthorized({});
           }

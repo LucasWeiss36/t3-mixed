@@ -10,7 +10,7 @@ import type * as PlatformError from "effect/PlatformError";
 import type * as Scope from "effect/Scope";
 import { expect } from "vite-plus/test";
 
-import type { GitCommandError } from "@t3tools/contracts";
+import { type GitCommandError, SourceControlProviderKind } from "@t3tools/contracts";
 import * as ServerConfig from "../config.ts";
 import * as ProjectSetupScriptRunner from "../project/ProjectSetupScriptRunner.ts";
 import * as ServerSettings from "../serverSettings.ts";
@@ -106,7 +106,7 @@ function makeFixture(input: { readonly forkChange: string | null }) {
       fork,
       request: {
         cwd: fork,
-        provider: "github" as const,
+        provider: SourceControlProviderKind.make("github"),
         host: upstream.slice(0, upstream.length - repository.length - 1),
         repository,
         number: 7,
@@ -284,7 +284,7 @@ it.layer(TestLayer)("UpstreamTake", (it) => {
       const service = yield* cherryPickService;
 
       const failure = yield* service
-        .cherryPick({ ...fixture.request, provider: "bitbucket" })
+        .cherryPick({ ...fixture.request, provider: SourceControlProviderKind.make("bitbucket") })
         .pipe(Effect.flip);
 
       expect(failure.detail).toContain("does not publish");
