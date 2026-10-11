@@ -28,6 +28,31 @@ WORK="$(mktemp -d /tmp/mt-codesign.XXXXXX)"
 cleanup() { rm -rf "$WORK"; }
 trap cleanup EXIT
 
+# Apple's timestamp server drops requests during brownouts, and osx-sign makes one per
+# binary, so a single dropped request failed a whole release. This codesign retries those
+# requests, and only those, before giving up.
+mkdir -p "$WORK/bin"
+cat >"$WORK/bin/codesign" <<'SH'
+#!/bin/bash
+for attempt in 1 2 3 4 5 6 7 8 9 10; do
+  out="$(mktemp)"
+  err="$(mktemp)"
+  /usr/bin/codesign "$@" >"$out" 2>"$err"
+  status=$?
+  if [[ $status -eq 0 || $attempt -eq 10 ]] || ! grep -q "timestamp service is not available" "$err"; then
+    cat "$out"
+    cat "$err" >&2
+    rm -f "$out" "$err"
+    exit "$status"
+  fi
+  rm -f "$out" "$err"
+  echo "codesign: timestamp service unavailable, retrying (attempt $attempt)" >&2
+  sleep $((attempt < 6 ? attempt * 5 : 30))
+done
+SH
+chmod +x "$WORK/bin/codesign"
+export PATH="$WORK/bin:$PATH"
+
 echo "codesigning with: $IDENTITY"
 echo "dmg: $DMG"
 
