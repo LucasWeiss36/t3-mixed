@@ -148,6 +148,7 @@ describe("large usage records", () => {
         },
         reportedCostUsd: 0.25,
         speed: "standard",
+        recordCount: 1,
         dedupeKey: JSON.stringify(["pi", entry.id, timestamp, "anthropic/actual"]),
       },
     ]);
