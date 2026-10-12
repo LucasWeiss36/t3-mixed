@@ -177,6 +177,11 @@ function selectOpenCodeRuntimeTextGeneration(
         v1: v1.rankPullRequests(input),
         v2: v2.rankPullRequests(input),
       }),
+    generateReviewGuide: (input) =>
+      byOpenCodeRuntime(probe.get, {
+        v1: v1.generateReviewGuide(input),
+        v2: v2.generateReviewGuide(input),
+      }),
   };
 }
 

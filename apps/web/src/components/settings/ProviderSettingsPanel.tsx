@@ -19,10 +19,12 @@ import {
   type AcpRegistryUrlAuthAction,
   PROVIDER_DISPLAY_NAMES,
   ProviderDriverKind,
+  type ProjectId,
   type ProviderInstanceConfig,
   type ProviderInstanceId,
   type RuntimeMode,
   resolveEnvironmentMachineKind,
+  resolveProjectProviderInstanceEnabled,
   resolveProviderInstanceEnabled,
 } from "@t3tools/contracts";
 import { DEFAULT_UNIFIED_SETTINGS } from "@t3tools/contracts/settings";
@@ -54,7 +56,7 @@ import {
 } from "../../state/environments";
 import { EMPTY_SERVER_PROVIDERS, serverEnvironment } from "../../state/server";
 import { useEnvironmentSessionState } from "../../state/session";
-import { useProjects } from "../../state/entities";
+import { useProjects, useServerConfigs } from "../../state/entities";
 import { useAtomCommand } from "../../state/use-atom-command";
 import { getRelativeTimeState } from "../../timestampFormat";
 import {
@@ -110,6 +112,7 @@ import {
 } from "./settingsLayout";
 import {
   buildProviderEnvironmentOptions,
+  buildProviderInstanceOverridePatch,
   classifyProviderEnvironmentAccess,
   isProviderSettingsEnvironmentAvailable,
   type ProviderEnvironmentAccess,
@@ -287,6 +290,11 @@ interface ProviderSettingsTarget {
   readonly instanceId?: ProviderInstanceId;
   readonly scoped?: boolean;
   readonly environmentIds?: readonly EnvironmentId[];
+  /**
+   * The project's checkouts on the selected environment, if a project is in
+   * scope. The enable toggle writes each one's override so they never diverge.
+   */
+  readonly projectIds?: readonly ProjectId[];
 }
 
 export function ProviderSettingsPanel(target: ProviderSettingsTarget) {
@@ -458,6 +466,7 @@ function ProviderSettingsPanelContent(target: ProviderSettingsTarget) {
               ? target.instanceId
               : undefined
           }
+          projectIds={target.projectIds ?? []}
         />
       ) : null}
     </>
@@ -468,16 +477,19 @@ function SelectedEnvironmentProviderSettings({
   environment,
   deviceTabs,
   targetInstanceId,
+  projectIds,
 }: {
   readonly environment: EnvironmentPresentation;
   readonly deviceTabs?: ReactNode;
   readonly targetInstanceId?: ProviderInstanceId | undefined;
+  readonly projectIds: readonly ProjectId[];
 }) {
   return (
     <RemoteSessionGatedProviderSettings
       environment={environment}
       deviceTabs={deviceTabs}
       targetInstanceId={targetInstanceId}
+      projectIds={projectIds}
     />
   );
 }
@@ -486,10 +498,12 @@ function RemoteSessionGatedProviderSettings({
   environment,
   deviceTabs,
   targetInstanceId,
+  projectIds,
 }: {
   readonly environment: EnvironmentPresentation;
   readonly deviceTabs?: ReactNode;
   readonly targetInstanceId?: ProviderInstanceId | undefined;
+  readonly projectIds: readonly ProjectId[];
 }) {
   const sessionState = useEnvironmentSessionState(environment.environmentId);
   const operateAccess = resolveRemoteOperateAccess({
@@ -503,6 +517,7 @@ function RemoteSessionGatedProviderSettings({
       operateAccess={operateAccess}
       deviceTabs={deviceTabs}
       targetInstanceId={targetInstanceId}
+      projectIds={projectIds}
     />
   );
 }
@@ -512,11 +527,13 @@ function AccessGatedProviderSettings({
   operateAccess,
   deviceTabs,
   targetInstanceId,
+  projectIds,
 }: {
   readonly environment: EnvironmentPresentation;
   readonly operateAccess: ProviderOperateAccess;
   readonly deviceTabs?: ReactNode;
   readonly targetInstanceId?: ProviderInstanceId | undefined;
+  readonly projectIds: readonly ProjectId[];
 }) {
   const access = classifyProviderEnvironmentAccess({
     connectionPhase: environment.connection.phase,
@@ -539,6 +556,7 @@ function AccessGatedProviderSettings({
       readOnly={access.kind === "read-only"}
       deviceTabs={deviceTabs}
       targetInstanceId={targetInstanceId}
+      projectIds={projectIds}
     />
   );
 }
@@ -549,11 +567,14 @@ export function EnvironmentProviderSettings({
   readOnly = false,
   deviceTabs,
   targetInstanceId,
+  projectIds = [],
 }: {
   readonly environmentId: EnvironmentId;
   readonly environmentLabel: string;
   readonly deviceTabs?: ReactNode;
   readonly targetInstanceId?: ProviderInstanceId | undefined;
+  /** The project's checkouts on this environment, if a project is in scope. */
+  readonly projectIds?: readonly ProjectId[];
   /**
    * Grey out and freeze every write control when this session's credential
    * lacks `providers:manage` on the environment. Selecting providers
@@ -572,6 +593,12 @@ export function EnvironmentProviderSettings({
   const serverProviders =
     useAtomValue(serverEnvironment.providersValueAtom(environmentId)) ?? EMPTY_SERVER_PROVIDERS;
   const projects = useProjects().filter((project) => project.environmentId === environmentId);
+  // Older servers decode an unknown providerInstances key away, so sending
+  // a project override patch would silently do nothing. Hide the switch
+  // instead of offering a control that can never take effect.
+  const supportsProjectProviderOverrides =
+    useServerConfigs().get(environmentId)?.environment.capabilities
+      .projectProviderInstanceOverrides === true;
   const refreshServerProviders = useAtomCommand(serverEnvironment.refreshProviders, {
     reportFailure: false,
   });
@@ -917,12 +944,40 @@ export function EnvironmentProviderSettings({
     )
       ? settings.providerRuntimeModeDefaults[row.instanceId]
       : undefined;
+    const representativeProjectId = projectIds[0];
+    const writeProjectOverride = (next: boolean | undefined) => {
+      updateSettings({
+        projectSettingsOverrides: buildProviderInstanceOverridePatch(
+          settings,
+          projectIds,
+          row.instanceId,
+          next,
+        ),
+      });
+    };
+    const projectOverride =
+      representativeProjectId === undefined || !supportsProjectProviderOverrides
+        ? undefined
+        : {
+            value:
+              settings.projectSettingsOverrides[representativeProjectId]?.providerInstances?.[
+                row.instanceId
+              ]?.enabled,
+            effectiveEnabled: resolveProjectProviderInstanceEnabled(
+              settings,
+              representativeProjectId,
+              row.instanceId,
+            ),
+            onChange: (next: boolean) => writeProjectOverride(next),
+            onReset: () => writeProjectOverride(undefined),
+          };
 
     return (
       <ProviderInstanceCard
         key={row.instanceId}
         environmentId={environmentId}
         acpProjects={projects}
+        projectOverride={projectOverride}
         onAcceptUrlAuth={
           readOnly ? undefined : (action) => acceptUrlAuthentication(row.instanceId, action)
         }

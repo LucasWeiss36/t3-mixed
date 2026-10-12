@@ -29,6 +29,7 @@ import {
 } from "effect/http";
 
 import * as ProjectService from "../project/ProjectService.ts";
+import * as PullRequestReviewGuideService from "../pullRequest/PullRequestReviewGuideService.ts";
 import * as ServerConfig from "../config.ts";
 import * as DeviceService from "../device/DeviceService.ts";
 import * as PreviewBrowser from "../preview/PreviewBrowser.ts";
@@ -100,6 +101,7 @@ const layerPullRequestsTest = McpHttpServer.layerPullRequestsToolkit.pipe(
   Layer.provide(
     Layer.mergeAll(
       Layer.mock(ProjectService.ProjectService)({}),
+      Layer.mock(PullRequestReviewGuideService.PullRequestReviewGuideService)({}),
       Layer.mock(Orchestrator.OrchestratorV2)({}),
       Layer.mock(ProjectionStore.ProjectionStoreV2)({}),
       NodeServices.layer,
@@ -1067,6 +1069,7 @@ it.effect("HTTP tool discovery only advertises monitors to monitoring credential
         Layer.mock(GitWorkflow.GitWorkflowService)({}),
         Layer.mock(Orchestrator.OrchestratorV2)({}),
         Layer.mock(ProjectService.ProjectService)({}),
+        Layer.mock(PullRequestReviewGuideService.PullRequestReviewGuideService)({}),
         Layer.mock(ProjectSetupScriptRunner.ProjectSetupScriptRunner)({}),
         Layer.mock(ProviderAdapterRegistry.ProviderAdapterRegistryV2)({}),
         Layer.mock(ProviderRegistry.ProviderRegistry)({}),

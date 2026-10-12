@@ -257,7 +257,7 @@ export const grokUsageFormat: TranscriptUsageFormat<void> = {
   },
   // Usage lands on turn_completed updates, but the adapter's captured ACP
   // updates may only carry the per-model breakdown, so accept either marker.
-  mightCarryUsage: (line) => line.includes('"turn_completed"') || line.includes('"modelUsage"'),
+  usageMarkers: ['"turn_completed"', '"modelUsage"'],
   parseLine: (line) => parseGrokLine(line),
   parseProjected: (projected) => parseGrokRecord(projected),
 };

@@ -17,6 +17,7 @@ import * as Schema from "effect/Schema";
 import { createMuseSdkHost, createMuseSdkHostEffect, type MuseSdkHost } from "./sdk.ts";
 import { museModelCapabilities, resolveMuseReasoningEffort } from "./modelCatalog.ts";
 import type { ProviderTextGeneration } from "@t3tools/provider-core/server/textGeneration";
+import { investigationUnsupported } from "@t3tools/provider-core/server/textGenerationOperations";
 import {
   buildBranchNamePrompt,
   buildCommitMessagePrompt,
@@ -358,11 +359,15 @@ export const makeMuseTextGeneration = Effect.fn("makeMuseTextGeneration")(functi
     });
     return { rankings: clampPullRequestRankings(generated.rankings) };
   });
+  // Muse runs in an empty read-only directory and cannot be pointed at a checkout to read.
+  const generateReviewGuide: ProviderTextGeneration["generateReviewGuide"] = () =>
+    Effect.fail(investigationUnsupported("generateReviewGuide", "Muse Code"));
   return {
     generateCommitMessage,
     generatePrContent,
     generateBranchName,
     generateThreadTitle,
     rankPullRequests,
+    generateReviewGuide,
   } satisfies ProviderTextGeneration;
 });

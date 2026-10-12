@@ -9,9 +9,10 @@ import {
   flattenTemporaryWorktreeBranchName,
   isTemporaryWorktreeBranch,
   normalizeGitRemoteUrl,
-  resolveAutoFeatureBranchName,
   parseGitHubRepositoryNameWithOwnerFromRemoteUrl,
   parseOriginUrlFromGitConfig,
+  resolveAutoFeatureBranchName,
+  sanitizeFeatureBranchName,
   WORKTREE_BRANCH_PREFIX,
 } from "./git.ts";
 
@@ -295,19 +296,56 @@ describe("applyGitStatusStreamEvent", () => {
   });
 });
 
-describe("resolveAutoFeatureBranchName", () => {
+describe("sanitizeFeatureBranchName", () => {
+  it.each(["feature", "fix", "team/jules"])("preserves the %s namespace", (namespace) => {
+    expect(sanitizeFeatureBranchName(`${namespace}/refine-toolbar`)).toBe(
+      `${namespace}/refine-toolbar`,
+    );
+  });
+
+  it("sanitizes an explicit namespace before preserving it", () => {
+    expect(sanitizeFeatureBranchName(' "FIX//Calendar recruitment filter" ')).toBe(
+      "fix/calendar-recruitment-filter",
+    );
+  });
+
   it.each([
-    [[], "topic", "feature/topic"],
-    [["feature/topic", "feature/topic-2"], "topic", "feature/topic-3"],
-    [["feature"], "topic", "feature-2/topic"],
-    [["feature/topic"], "topic/child", "feature/topic-2/child"],
-    [["feature/topic/child"], "topic", "feature/topic-2"],
-    [["feature/topic/child", "feature/topic-2/child"], "topic", "feature/topic-3"],
-    [["feature", "feature-2/topic", "feature-2/topic-2/child"], "topic", "feature-2/topic-3"],
-    [["FEATURE/TOPIC"], "topic/child", "feature/topic-2/child"],
-    [["feature/topic-other"], "topic", "feature/topic"],
-  ])("avoids branch and namespace collisions for %j", (existing, preferred, expected) => {
-    expect(resolveAutoFeatureBranchName(existing as string[], preferred as string)).toBe(expected);
+    ["refine toolbar", "feature/refine-toolbar"],
+    ["", "feature/update"],
+    [" /?. / ", "feature/update"],
+    ["fix///", "feature/fix"],
+  ])("keeps the fallback for unprefixed input %s", (input, expected) => {
+    expect(sanitizeFeatureBranchName(input)).toBe(expected);
+  });
+
+  it("keeps the existing length limit for namespaced branches", () => {
+    expect(sanitizeFeatureBranchName(`fix/${"x".repeat(80)}`)).toBe(`fix/${"x".repeat(60)}`);
+  });
+});
+
+describe("resolveAutoFeatureBranchName", () => {
+  it("resolves case-insensitive collisions within the generated namespace", () => {
+    expect(
+      resolveAutoFeatureBranchName(
+        ["FIX/refine-toolbar", "fix/refine-toolbar-2"],
+        "fix/refine-toolbar",
+      ),
+    ).toBe("fix/refine-toolbar-3");
+  });
+
+  it("keeps the fallback when no preferred branch is supplied", () => {
+    expect(resolveAutoFeatureBranchName(["feature/update"])).toBe("feature/update-2");
+  });
+
+  it.each([
+    ["fix/name", ["fix"], "fix-2/name"],
+    ["team/jules/fix/name", ["team/jules"], "team/jules-2/fix/name"],
+    ["fix/name", ["fix/name/child"], "fix/name-2"],
+    ["FIX/name", ["FIX", "FIX-2"], "fix-3/name"],
+    ["fix/name", ["fixes", "fix/name-extra/child"], "fix/name"],
+    [undefined, ["feature", "feature-2"], "feature-3/update"],
+  ])("resolves %s against namespace blockers %j", (preferredBranch, existingNames, expected) => {
+    expect(resolveAutoFeatureBranchName(existingNames, preferredBranch)).toBe(expected);
   });
 });
 
