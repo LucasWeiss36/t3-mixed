@@ -39,8 +39,8 @@ import { Route as SettingsArchivedRouteImport } from './routes/settings.archived
 import { Route as SettingsAppearanceRouteImport } from './routes/settings.appearance'
 import { Route as ProjectsProjectKeyRouteImport } from './routes/projects.$projectKey'
 import { Route as ChatPullRequestsRouteImport } from './routes/_chat.pull-requests'
-import { Route as SettingsPluginsPluginIdRouteImport } from './routes/settings.plugins_.$pluginId'
 import { Route as ChatNewRouteImport } from './routes/_chat.new'
+import { Route as SettingsPluginsPluginIdRouteImport } from './routes/settings.plugins_.$pluginId'
 import { Route as ChatDraftDraftIdRouteImport } from './routes/_chat.draft.$draftId'
 import { Route as ChatEnvironmentIdThreadIdRouteImport } from './routes/_chat.$environmentId.$threadId'
 
@@ -194,15 +194,15 @@ const ChatPullRequestsRoute = ChatPullRequestsRouteImport.update({
   path: '/pull-requests',
   getParentRoute: () => ChatRoute,
 } as any)
-const SettingsPluginsPluginIdRoute = SettingsPluginsPluginIdRouteImport.update({
-  id: '/plugins_/$pluginId',
-  path: '/plugins/$pluginId',
-  getParentRoute: () => SettingsRoute,
-} as any)
 const ChatNewRoute = ChatNewRouteImport.update({
   id: '/new',
   path: '/new',
   getParentRoute: () => ChatRoute,
+} as any)
+const SettingsPluginsPluginIdRoute = SettingsPluginsPluginIdRouteImport.update({
+  id: '/plugins_/$pluginId',
+  path: '/plugins/$pluginId',
+  getParentRoute: () => SettingsRoute,
 } as any)
 const ChatDraftDraftIdRoute = ChatDraftDraftIdRouteImport.update({
   id: '/draft/$draftId',
@@ -656,19 +656,19 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ChatPullRequestsRouteImport
       parentRoute: typeof ChatRoute
     }
-    '/settings/plugins_/$pluginId': {
-      id: '/settings/plugins_/$pluginId'
-      path: '/plugins/$pluginId'
-      fullPath: '/settings/plugins/$pluginId'
-      preLoaderRoute: typeof SettingsPluginsPluginIdRouteImport
-      parentRoute: typeof SettingsRoute
-    }
     '/_chat/new': {
       id: '/_chat/new'
       path: '/new'
       fullPath: '/new'
       preLoaderRoute: typeof ChatNewRouteImport
       parentRoute: typeof ChatRoute
+    }
+    '/settings/plugins_/$pluginId': {
+      id: '/settings/plugins_/$pluginId'
+      path: '/plugins/$pluginId'
+      fullPath: '/settings/plugins/$pluginId'
+      preLoaderRoute: typeof SettingsPluginsPluginIdRouteImport
+      parentRoute: typeof SettingsRoute
     }
     '/_chat/draft/$draftId': {
       id: '/_chat/draft/$draftId'
