@@ -45,6 +45,8 @@ function IndexDraftLanding() {
   const router = useRouter();
   // Read at effect time: a deep link can finish navigating before this
   // index effect is flushed, and the rendered pathname would still be "/".
+  // This page also stays mounted while a navigation away from "/" is still
+  // loading, but the router already points at the new location.
   const isStillOnIndex = useEffectEvent(() => router.state.location.pathname === "/");
   const projects = useProjects();
   const threads = useThreadShells();

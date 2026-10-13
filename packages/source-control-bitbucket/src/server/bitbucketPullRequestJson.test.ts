@@ -26,10 +26,10 @@ function pullRequest(overrides: Record<string, unknown> = {}): Record<string, un
     author: { display_name: "Bilal Hassan", nickname: "bilal", type: "user" },
     source: {
       branch: { name: "feat/page" },
-      commit: { hash: "head-oid" },
+      commit: { hash: "9f3a7c2d8b1e6f045a9c3d7e2b8f1a6c0d4e5f93", type: "commit" },
       repository: { full_name: "fork/web" },
     },
-    destination: { branch: { name: "master" }, commit: { hash: "base-oid" } },
+    destination: { branch: { name: "master" }, commit: { hash: "base-commit" } },
     links: { html: { href: "https://bitbucket.org/acme/web/pull-requests/897" } },
     ...overrides,
   };
@@ -56,6 +56,7 @@ describe("decodePullRequestPageJson", () => {
       url: "https://bitbucket.org/acme/web/pull-requests/897",
       author: { login: "bilal", name: "Bilal Hassan" },
       headBranch: "feat/page",
+      headSha: "9f3a7c2d8b1e6f045a9c3d7e2b8f1a6c0d4e5f93",
       headRepositoryNameWithOwner: "fork/web",
       baseBranch: "master",
       state: "open",
@@ -113,7 +114,7 @@ describe("decodePullRequestJson", () => {
   it("carries the immutable diff endpoints", () => {
     expect(
       expectSuccess(decodePullRequestJson(JSON.stringify(pullRequest()))).diffRevision,
-    ).toEqual({ baseOid: "base-oid", headOid: "head-oid" });
+    ).toEqual({ baseOid: "base-commit", headOid: "9f3a7c2d8b1e6f045a9c3d7e2b8f1a6c0d4e5f93" });
   });
 
   it("keeps a usable pull request when immutable diff endpoints are null or partial", () => {
@@ -130,6 +131,27 @@ describe("decodePullRequestJson", () => {
 
     expect(nullCommit.diffRevision).toBeUndefined();
     expect(partialCommit.diffRevision).toBeUndefined();
+  });
+
+  it("preserves the source commit hash as the head SHA", () => {
+    const decoded = expectSuccess(decodePullRequestJson(JSON.stringify(pullRequest())));
+
+    expect(decoded).toMatchObject({ headSha: "9f3a7c2d8b1e6f045a9c3d7e2b8f1a6c0d4e5f93" });
+  });
+
+  it.each([
+    { metadata: "absent commit", commit: undefined },
+    { metadata: "null commit", commit: null },
+    { metadata: "absent hash", commit: {} },
+    { metadata: "null hash", commit: { hash: null } },
+  ])("reads detail and list payloads with $metadata", ({ commit }) => {
+    const raw = pullRequest({ source: { branch: { name: "feat/page" }, commit } });
+    const detail = expectSuccess(decodePullRequestJson(JSON.stringify(raw)));
+    const list = expectSuccess(decodePullRequestPageJson(page([raw])));
+
+    expect(detail).toMatchObject({ number: 897, headBranch: "feat/page", headSha: null });
+    expect(list.items).toHaveLength(1);
+    expect(list.items[0]).toMatchObject({ number: 897, headBranch: "feat/page", headSha: null });
   });
 
   it("reads reviewers as review requests", () => {

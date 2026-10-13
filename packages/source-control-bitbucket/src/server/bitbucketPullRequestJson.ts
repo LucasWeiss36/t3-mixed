@@ -181,6 +181,7 @@ export interface BitbucketPullRequest {
   readonly url: string;
   readonly author: PullRequestActor | null;
   readonly headBranch: string;
+  readonly headSha: string | null;
   readonly headRepositoryNameWithOwner: string | null;
   readonly baseBranch: string;
   readonly diffRevision?: { readonly baseOid: string; readonly headOid: string };
@@ -299,6 +300,7 @@ function toPullRequest(raw: Schema.Schema.Type<typeof RawPullRequestSchema>): Bi
     url: raw.links.html.href,
     author: toActor(raw.author),
     headBranch: raw.source.branch.name,
+    headSha: trimmed(raw.source.commit?.hash),
     headRepositoryNameWithOwner: raw.source.repository?.full_name ?? null,
     baseBranch: raw.destination.branch.name,
     ...(baseOid === null || headOid === null ? {} : { diffRevision: { baseOid, headOid } }),
