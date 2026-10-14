@@ -2032,6 +2032,7 @@ const layerWsRpc = (
                     : { reuseExistingThread: input.reuseExistingThread }),
                   projectId: input.projectId,
                   title: input.title,
+                  ...(input.task === undefined ? {} : { task: input.task }),
                   ...(input.generateTitle === undefined
                     ? {}
                     : { generateTitle: input.generateTitle }),

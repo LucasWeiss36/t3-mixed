@@ -2705,3 +2705,150 @@ it.effect("replays an accepted message.dispatch after the project disables the i
     }
   }).pipe(Effect.provide(Layer.mergeAll(harness.layer, layerFiles)));
 });
+
+it.effect("preserves Kanban metadata when launching an assigned task", () => {
+  const harness = makeHarness();
+  return Effect.gen(function* () {
+    const launches = yield* ThreadLaunch.ThreadLaunchService;
+    const threads = yield* ThreadManagement.ThreadManagementService;
+    const task = {
+      content: "Kanban launch prompt",
+      attachments: [],
+      statusId: "todo",
+      orderKey: "2026-10-14T07:00:00.000Z",
+      assigned: true,
+      workspaceMode: "local" as const,
+    };
+    const input = {
+      ...launchInput({
+        command: "command:kanban:launch",
+        thread: "thread:kanban:launch",
+        message: task.content,
+      }),
+      task,
+    };
+    const launched = yield* launches.launch(input);
+    assert.deepEqual(launched.projection.thread.task, task);
+    assert.equal(launched.projection.messages[0]?.text, task.content);
+    const saved = yield* threads.getThreadProjection(launched.threadId);
+    assert.deepEqual(saved.thread.task, task);
+    const retried = yield* launches.launch(input);
+    assert.deepEqual(retried.projection.thread.task, task);
+    assert.equal(retried.threadId, launched.threadId);
+  }).pipe(Effect.provide(harness.layer));
+});
+
+it.effect("claims pending Kanban images for task creation, editing, and assigned launch", () => {
+  const harness = makeHarness();
+  const layerFiles = ServerConfig.layerTest(process.cwd(), { prefix: "t3-kanban-images-" }).pipe(
+    Layer.provideMerge(NodeServices.layer),
+  );
+  return Effect.gen(function* () {
+    const config = yield* ServerConfig.ServerConfig;
+    const fs = yield* FileSystem.FileSystem;
+    const threads = yield* ThreadManagement.ThreadManagementService;
+    yield* fs.makeDirectory(config.attachmentsDir, { recursive: true });
+    const attachment = {
+      type: "image" as const,
+      id: ChatAttachmentId.make(createPendingAttachmentId()!),
+      name: "kanban.png",
+      mimeType: "image/png",
+      sizeBytes: 4,
+    };
+    const pendingPath = resolveAttachmentPath({
+      attachmentsDir: config.attachmentsDir,
+      attachment,
+    });
+    assert.isNotNull(pendingPath);
+    yield* fs.writeFile(pendingPath!, new Uint8Array([1, 2, 3, 4]));
+    const threadId = ThreadId.make("kanban-image-thread");
+    const task = {
+      content: "Image task",
+      attachments: [attachment],
+      statusId: "todo",
+      orderKey: "a",
+      assigned: false,
+    };
+    yield* ThreadMessageIntake.dispatchCommand({
+      type: "thread.create",
+      commandId: CommandId.make("kanban-image-create"),
+      threadId,
+      projectId,
+      title: "Image task",
+      modelSelection,
+      runtimeMode: "full-access",
+      interactionMode: "default",
+      branch: null,
+      worktreePath: null,
+      createdBy: "user",
+      creationSource: "web",
+      task,
+    });
+    const created = yield* threads.getThreadProjection(threadId);
+    const stored = created.thread.task?.attachments[0];
+    assert.isDefined(stored);
+    assert.notEqual(stored!.id, attachment.id);
+    assert.deepEqual(
+      yield* fs.readFile(
+        resolveAttachmentPath({ attachmentsDir: config.attachmentsDir, attachment: stored! })!,
+      ),
+      new Uint8Array([1, 2, 3, 4]),
+    );
+    const added = {
+      ...attachment,
+      id: ChatAttachmentId.make(createPendingAttachmentId()!),
+      name: "edited.png",
+    };
+    yield* fs.writeFile(
+      resolveAttachmentPath({ attachmentsDir: config.attachmentsDir, attachment: added })!,
+      new Uint8Array([5, 6, 7, 8]),
+    );
+    yield* ThreadMessageIntake.dispatchCommand({
+      type: "thread.metadata.update",
+      commandId: CommandId.make("kanban-image-edit"),
+      threadId,
+      task: { ...task, attachments: [stored!, added] },
+    });
+    const edited = yield* threads.getThreadProjection(threadId);
+    assert.equal(edited.thread.task?.attachments[0]?.id, stored!.id);
+    assert.notEqual(edited.thread.task?.attachments[1]?.id, added.id);
+    assert.deepEqual(
+      yield* fs.readFile(
+        resolveAttachmentPath({
+          attachmentsDir: config.attachmentsDir,
+          attachment: edited.thread.task!.attachments[1]!,
+        })!,
+      ),
+      new Uint8Array([5, 6, 7, 8]),
+    );
+    const launch = {
+      ...launchInput({
+        command: "kanban-image-launch",
+        thread: "kanban-assigned-image",
+        message: "Inspect image",
+      }),
+      task: { ...task, assigned: true },
+      initialMessage: {
+        messageId: MessageId.make("kanban-image-message"),
+        text: "Inspect image",
+        attachments: [attachment],
+      },
+    };
+    const assigned = yield* ThreadMessageIntake.launchThread(launch);
+    const taskAttachment = assigned.projection.thread.task?.attachments[0];
+    assert.isDefined(taskAttachment);
+    assert.notEqual(taskAttachment!.id, attachment.id);
+    assert.equal(taskAttachment!.id, assigned.projection.messages[0]?.attachments[0]?.id);
+    assert.deepEqual(
+      yield* fs.readFile(
+        resolveAttachmentPath({
+          attachmentsDir: config.attachmentsDir,
+          attachment: taskAttachment!,
+        })!,
+      ),
+      new Uint8Array([1, 2, 3, 4]),
+    );
+    const replayed = yield* ThreadMessageIntake.launchThread(launch);
+    assert.deepEqual(replayed.projection.thread.task, assigned.projection.thread.task);
+  }).pipe(Effect.provide(Layer.mergeAll(harness.layer, layerFiles)));
+});

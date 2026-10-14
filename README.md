@@ -35,7 +35,7 @@ pnpm exec vp run build:desktop
 node scripts/build-mixed-windows.mjs
 ```
 
-The packaging script downloads and verifies the pinned runtime, extracts it without executing its installer, and produces release-mixed/T3-Mixed-0.1.0-win-x64.zip. A normal installer build through the upstream packaging scripts additionally requires Visual Studio C++ build tools for native dependencies.
+The packaging script downloads and verifies the pinned runtime, extracts it without executing its installer, and produces release-mixed/T3-Mixed-0.1.1-win-x64.zip. A normal installer build through the upstream packaging scripts additionally requires Visual Studio C++ build tools for native dependencies.
 
 For development, use an isolated home:
 
@@ -52,7 +52,11 @@ pnpm --filter @t3tools/web exec vp test run src/components/tasks --project unit
 pnpm --filter t3 exec vp test run src/orchestration-v2/FoundationPersistence.test.ts -t 'persists Kanban'
 ```
 
-The initial build passed 15 task UI/model unit tests, a V2 task persistence/replay test, web and desktop typechecks, and lint on changed TypeScript files (React warnings remain). The upstream server typechecker currently reports pre-existing unused Effect diagnostic directives; these warnings are documented rather than suppressed. A packaged Windows app startup was verified. Automated end-to-end browser verification was blocked by connection errors in the collaborative browser; it is not claimed complete.
+The task UI/model tests, V2 persistence/replay test, and assigned-task/attachment regressions passed. An integrated browser pass against the built server/client exercised creation, editing, search, board/list views, column changes, Codex execution, chat opening, task details, image upload/editing, archive/unarchive, deletion, and persistence after server restarts. Drag handlers were exercised with browser DOM drag events; physical mouse dragging was not separately verified. File selection used a generated 4×4 PNG fixture. Web and desktop typechecks passed; the server typechecker reports pre-existing unused Effect diagnostic directives (warning exit code), with no TypeScript errors in the changed code. Changed-file lint passed with existing warnings. Other providers, worktree tasks, cloud OAuth, and every inherited MT Code feature are not covered by this pass.
+
+## Upgrade from 0.1.0
+
+Version 0.1.1 fixes assigned tasks disappearing from the board and task images retaining temporary upload references. Images created with 0.1.0 may need to be reattached if their temporary uploads have already been deleted or expired. Existing task titles, content, statuses, and chat history remain compatible.
 
 ## Known integration limitation
 

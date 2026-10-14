@@ -10,7 +10,7 @@ import { extractAll, createPackageWithOptions } from "@electron/asar";
 const require = createRequire(import.meta.url);
 const { path7za } = require("7zip-bin");
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
-const version = "0.1.0";
+const version = "0.1.1";
 const runtime = {
   version: "0.1.28",
   url: "https://github.com/munimtechnologies/mtcode/releases/download/munim-v0.1.28/MT-Code-0.1.28-x64.exe",

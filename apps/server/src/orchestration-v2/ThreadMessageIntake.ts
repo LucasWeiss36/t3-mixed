@@ -1,6 +1,10 @@
 import { remapComposerContextAttachments } from "@t3tools/shared/composerContextReferences";
 import { appendUserInputAttachmentPaths } from "../provider/userInputAttachments.ts";
-import type { ChatAttachment, OrchestrationV2Command } from "@t3tools/contracts";
+import {
+  ChatImageAttachment,
+  type ChatAttachment,
+  type OrchestrationV2Command,
+} from "@t3tools/contracts";
 import * as Effect from "effect/Effect";
 import * as Schema from "effect/Schema";
 import { resolveAttachmentPath } from "../attachmentStore.ts";
@@ -32,6 +36,7 @@ function dispatchWasNotAccepted(
       return false;
   }
 }
+const isImageAttachment = Schema.is(ChatImageAttachment);
 const isOrchestratorError = Schema.is(Orchestrator.OrchestratorV2Error);
 const isThreadManagementError = Schema.is(ThreadManagement.ThreadManagementError);
 
@@ -58,6 +63,44 @@ export const dispatchCommand = Effect.fn("ThreadMessageIntake.dispatchCommand")(
   command: OrchestrationV2Command,
 ) {
   const threads = yield* ThreadManagement.ThreadManagementService;
+  if (
+    (command.type === "thread.create" || command.type === "thread.metadata.update") &&
+    command.task !== undefined
+  ) {
+    const claimed = yield* AttachmentClaims.claimPendingAttachments({
+      threadId: command.threadId,
+      attachments: command.task.attachments,
+    });
+    return yield* threads
+      .dispatch({
+        ...command,
+        task: {
+          ...command.task,
+          attachments: command.task.attachments.map((attachment, index) => ({
+            ...attachment,
+            id: claimed.attachments[index]!.id,
+            mimeType: claimed.attachments[index]!.mimeType,
+          })),
+        },
+      })
+      .pipe(
+        Effect.tap((result) =>
+          releaseUnusedClaims(
+            claimed.claimedPaths,
+            result.storedEvents.flatMap(({ event }) =>
+              event.type === "thread.created" || event.type === "thread.metadata-updated"
+                ? (event.payload.task?.attachments ?? [])
+                : [],
+            ),
+          ),
+        ),
+        Effect.tapError((error) =>
+          dispatchWasNotAccepted(error)
+            ? AttachmentClaims.releaseClaimedAttachments(claimed.claimedPaths)
+            : Effect.void,
+        ),
+      );
+  }
   if (command.type === "runtime-request.respond" && command.attachmentsByQuestionId) {
     const config = yield* ServerConfig.ServerConfig;
     const incomingByQuestionId = command.attachmentsByQuestionId;
@@ -188,7 +231,15 @@ export const launchThread = Effect.fn("ThreadMessageIntake.launchThread")(functi
 ) {
   const launches = yield* ThreadLaunch.ThreadLaunchService;
   yield* AttachmentClaims.validateAttachmentLimits(input.initialMessage?.attachments ?? []);
-  if (!input.initialMessage?.attachments.some(AttachmentClaims.attachmentIsPendingUpload)) {
+  yield* AttachmentClaims.validateAttachmentLimits(input.task?.attachments ?? []);
+  const incoming = [
+    ...new Map(
+      [...(input.initialMessage?.attachments ?? []), ...(input.task?.attachments ?? [])].map(
+        (attachment) => [attachment.id, attachment],
+      ),
+    ).values(),
+  ];
+  if (!incoming.some(AttachmentClaims.attachmentIsPendingUpload)) {
     return yield* launches.launch(input);
   }
   if (input.threadId === undefined) {
@@ -198,31 +249,48 @@ export const launchThread = Effect.fn("ThreadMessageIntake.launchThread")(functi
   }
   const claimed = yield* AttachmentClaims.claimPendingAttachments({
     threadId: input.threadId,
-    attachments: input.initialMessage.attachments,
+    attachments: incoming,
   });
+  const claimedById = new Map(
+    incoming.map((attachment, index) => [attachment.id, claimed.attachments[index]!]),
+  );
+  const rewriteAttachments = (attachments: ReadonlyArray<ChatAttachment>) =>
+    attachments.map((attachment) => claimedById.get(attachment.id) ?? attachment);
   return yield* launches
     .launch({
       ...input,
-      initialMessage: {
-        ...input.initialMessage,
-        attachments: claimed.attachments,
-        ...(input.initialMessage.context
-          ? {
-              context: remapComposerContextAttachments(
-                input.initialMessage.context,
-                input.initialMessage.attachments,
-                claimed.attachments,
-              ),
-            }
-          : {}),
-      },
+      ...(input.task === undefined
+        ? {}
+        : {
+            task: {
+              ...input.task,
+              attachments: rewriteAttachments(input.task.attachments).filter(isImageAttachment),
+            },
+          }),
+      ...(input.initialMessage === undefined
+        ? {}
+        : {
+            initialMessage: {
+              ...input.initialMessage,
+              attachments: rewriteAttachments(input.initialMessage.attachments),
+              ...(input.initialMessage.context
+                ? {
+                    context: remapComposerContextAttachments(
+                      input.initialMessage.context,
+                      input.initialMessage.attachments,
+                      rewriteAttachments(input.initialMessage.attachments),
+                    ),
+                  }
+                : {}),
+            },
+          }),
     })
     .pipe(
       Effect.tap((result) =>
-        releaseUnusedClaims(
-          claimed.claimedPaths,
-          result.projection.messages.flatMap((message) => message.attachments),
-        ),
+        releaseUnusedClaims(claimed.claimedPaths, [
+          ...result.projection.messages.flatMap((message) => message.attachments),
+          ...(result.projection.thread.task?.attachments ?? []),
+        ]),
       ),
       Effect.tapError((error) => {
         if (error._tag === "ThreadManagementProviderInstanceDisabledError") {
