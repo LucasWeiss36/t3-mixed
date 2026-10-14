@@ -12,3 +12,8 @@ this file as LICENSE-MIT. MIT permits redistribution under other terms, so
 the work as a whole — including everything Munim Technologies has added — is
 distributed under the Apache License, Version 2.0 (see LICENSE), while the
 upstream notice above stays in force for the portions it covers.
+
+T3 Mixed additionally adapts the task board, dialogs, details panel and tests
+from T3 Kanban (https://github.com/what1f/t3kanban), distributed under the
+MIT License; the T3 Tools Inc. notice in LICENSE-MIT applies to those portions.
+See FORK-CREDITS.md for source attribution and the scope of the adaptation.

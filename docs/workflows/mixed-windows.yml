@@ -1,0 +1,42 @@
+name: T3 Mixed Windows
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  build:
+    runs-on: windows-latest
+    timeout-minutes: 30
+    env:
+      T3CODE_DESKTOP_DISTRO: munim
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 11.10.0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: pnpm
+      - name: Install selected workspace dependencies
+        run: pnpm install --frozen-lockfile --filter @t3tools/web... --filter @t3tools/desktop... --filter t3... --filter @t3tools/scripts... --filter @t3tools/monorepo --filter @t3tools/oxlint-plugin-t3code
+      - name: Check web and desktop types
+        run: |
+          pnpm --filter @t3tools/web typecheck
+          if ($LASTEXITCODE) { exit $LASTEXITCODE }
+          pnpm --filter @t3tools/desktop typecheck
+      - name: Test Kanban model and controls
+        run: pnpm --filter @t3tools/web exec vp test run src/components/tasks --project unit
+      - name: Test durable task persistence
+        run: pnpm --filter t3 exec vp test run src/orchestration-v2/FoundationPersistence.test.ts -t 'persists Kanban'
+      - name: Build application
+        run: pnpm exec vp run build:desktop
+      - name: Package portable Windows application
+        run: node scripts/build-mixed-windows.mjs
+      - uses: actions/upload-artifact@v4
+        with:
+          name: T3-Mixed-Windows
+          path: release-mixed/*

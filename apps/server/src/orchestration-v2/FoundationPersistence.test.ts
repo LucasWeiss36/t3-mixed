@@ -3516,3 +3516,34 @@ it.effect("publishes live events in commit order across concurrent writers", () 
     }).pipe(Effect.provide(layerEventSink));
   }).pipe(Effect.provide(layerDatabase)),
 );
+
+
+it.effect("persists Kanban task content and column through V2 replay and shell reads", () =>
+  Effect.gen(function* () {
+    const store = yield* EventStore.EventStoreV2;
+    const projections = yield* ProjectionStore.ProjectionStoreV2;
+    const maintenance = yield* ProjectionMaintenance.ProjectionMaintenanceV2;
+    const now = yield* DateTime.now;
+    const threadId = ThreadId.make("thread:kanban:persistence");
+    const original = {
+      ...makeThread(threadId, now),
+      task: { content: "Review the change", attachments: [], statusId: "todo", orderKey: "n", assigned: false },
+    } satisfies OrchestrationV2AppThread;
+    const moved = { ...original, task: { ...original.task, content: "Review tests too", statusId: "in-review" } };
+    const renamed = { ...moved, title: "Review release" };
+    yield* store.append({ events: [
+      threadCreatedEvent({ id: "event:kanban:create", thread: original, now }),
+      { id: EventId.make("event:kanban:move"), type: "thread.metadata-updated", threadId, occurredAt: now, payload: moved },
+      { id: EventId.make("event:kanban:rename"), type: "thread.metadata-updated", threadId, occurredAt: now, payload: renamed },
+    ] });
+    const rebuilt = yield* maintenance.rebuild;
+    assert.isTrue(rebuilt.valid);
+    assert.deepEqual((yield* projections.getThreadProjection(threadId)).thread.task, renamed.task);
+    assert.deepEqual((yield* projections.getThreadShell(threadId))?.task, renamed.task);
+    assert.equal((yield* projections.getThreadShell(threadId))?.title, "Review release");
+    const shell = yield* projections.getShellSnapshot();
+    assert.deepEqual(shell.threads.find((thread) => thread.id === threadId)?.task, renamed.task);
+    yield* maintenance.rebuild;
+    assert.deepEqual((yield* projections.getThreadProjection(threadId)).thread.task, renamed.task);
+  }).pipe(Effect.provide(layerTest)),
+);

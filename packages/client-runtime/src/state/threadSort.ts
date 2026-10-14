@@ -184,7 +184,7 @@ export function getLatestThreadForProject<
 // on the same order.
 const PIN_ORDER_DIGITS = "abcdefghijklmnopqrstuvwxyz";
 
-function isValidPinOrderKey(key: string): boolean {
+export function isValidPinOrderKey(key: string): boolean {
   if (key.length === 0) return false;
   for (const char of key) {
     if (!PIN_ORDER_DIGITS.includes(char)) return false;

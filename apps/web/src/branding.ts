@@ -17,8 +17,8 @@ export const HOSTED_APP_CHANNEL =
 export const HOSTED_APP_CHANNEL_LABEL =
   HOSTED_APP_CHANNEL === "nightly" ? "Nightly" : HOSTED_APP_CHANNEL === "latest" ? "Latest" : null;
 export const APP_BASE_NAME =
-  injectedDesktopAppBranding?.baseName ?? import.meta.env.VITE_APP_BASE_NAME?.trim() ?? "MT Code";
-export const APP_HAS_UPDATE_TRACKS = APP_BASE_NAME !== "MT Code";
+  injectedDesktopAppBranding?.baseName ?? import.meta.env.VITE_APP_BASE_NAME?.trim() ?? "T3 Mixed";
+export const APP_HAS_UPDATE_TRACKS = APP_BASE_NAME !== "MT Code" && APP_BASE_NAME !== "T3 Mixed";
 
 const resolvedStageLabel =
   injectedDesktopAppBranding?.stageLabel ??

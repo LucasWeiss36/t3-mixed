@@ -68,6 +68,7 @@ export interface DeleteProjectInput extends CommandMetadata {
 }
 
 export interface CreateThreadInput extends CommandMetadata {
+  readonly task?: import("@t3tools/contracts").ThreadTaskDetails;
   readonly threadId: ThreadId;
   readonly projectId: ProjectId;
   readonly title: string;
@@ -123,6 +124,7 @@ export interface VisitThreadInput extends ThreadCommandInput {
 export type MarkThreadUnreadInput = ThreadCommandInput;
 
 export interface UpdateThreadMetadataInput extends ThreadCommandInput {
+  readonly task?: import("@t3tools/contracts").ThreadTaskDetails;
   readonly limitRecovery?: import("@t3tools/contracts").OrchestrationV2LimitRecoveryUpdate | null;
   readonly title?: string;
   readonly modelSelection?: ModelSelection;
@@ -146,6 +148,7 @@ export interface SetThreadInteractionModeInput extends ThreadCommandInput {
 
 interface StartThreadBootstrap {
   readonly createThread?: {
+    readonly task?: import("@t3tools/contracts").ThreadTaskDetails;
     readonly projectId: ProjectId;
     readonly title: string;
     readonly modelSelection: ModelSelection;
@@ -399,6 +402,7 @@ export const createThread = Effect.fn("EnvironmentCommands.createThread")(functi
 ) {
   return yield* dispatch({
     type: "thread.create",
+    ...(input.task === undefined ? {} : { task: input.task }),
     commandId: yield* allocateCommandId(input),
     createdBy: "user",
     creationSource: input.creationSource ?? "web",
@@ -566,6 +570,7 @@ export const updateThreadMetadata = Effect.fn("EnvironmentCommands.updateThreadM
     const commandId = yield* allocateCommandId(input);
     let result = null;
     if (
+      input.task !== undefined ||
       input.title !== undefined ||
       input.branch !== undefined ||
       input.worktreePath !== undefined ||
@@ -575,6 +580,7 @@ export const updateThreadMetadata = Effect.fn("EnvironmentCommands.updateThreadM
     ) {
       result = yield* dispatch({
         type: "thread.metadata.update",
+        ...(input.task === undefined ? {} : { task: input.task }),
         ...(input.limitRecovery === undefined ? {} : { limitRecovery: input.limitRecovery }),
         commandId,
         threadId: input.threadId,
@@ -676,6 +682,7 @@ export const startThreadTurn = Effect.fn("EnvironmentCommands.startThreadTurn")(
       threadId: input.threadId,
       ...(bootstrap === undefined ? { reuseExistingThread: true } : {}),
       projectId: thread.projectId,
+      ...(bootstrap?.task === undefined ? {} : { task: bootstrap.task }),
       title: input.titleSeed ?? thread.title,
       generateTitle: input.titleSeed !== undefined,
       modelSelection: input.modelSelection ?? thread.modelSelection,

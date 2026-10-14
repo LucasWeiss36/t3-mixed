@@ -46,20 +46,20 @@ const OFFICIAL: DesktopDistroIdentity = {
 
 const MUNIM: DesktopDistroIdentity = {
   id: "munim",
-  appId: "com.munim.mtcode",
-  productName: "MT Code",
-  packageName: "mtcode",
-  artifactName: "MT-Code-${version}-${arch}.${ext}",
-  description: "MT Code — Munim Technologies fork of T3 Code",
+  appId: "com.lucas.t3mixed",
+  productName: "T3 Mixed",
+  packageName: "t3mixed",
+  artifactName: "T3-Mixed-${version}-${arch}.${ext}",
+  description: "T3 Mixed — MT Code with T3 Kanban tasks",
   author: "Munim, Inc.",
-  updateRepository: "munimtechnologies/mtcode",
-  protocolSchemes: ["mtcode", "mtcode-dev"],
-  protocolName: "MT Code",
+  updateRepository: undefined,
+  protocolSchemes: ["t3mixed", "t3mixed-dev"],
+  protocolName: "T3 Mixed",
   linuxExecutableName: "mtcode",
   linuxStartupWmClass: "mtcode",
   linuxMaintainer: "Munim Technologies <support@munimtech.com>",
-  nsisShortcutName: "MT Code",
-  nsisInstallDirectoryName: "mtcode",
+  nsisShortcutName: "T3 Mixed",
+  nsisInstallDirectoryName: "t3mixed",
 };
 
 export function resolveDesktopDistroId(

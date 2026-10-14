@@ -1,157 +1,61 @@
-<!-- Banner Image -->
+# T3 Mixed
 
-<p align="center">
-  <a href="https://github.com/munimtechnologies/mtcode">
-    <img alt="Munim Technologies" height="128" src="./.github/resources/banner.png">
-    <h1 align="center">MT Code</h1>
-  </a>
-</p>
+A separate community desktop build combining [MT Code](https://github.com/munimtechnologies/mtcode) with the task board from [T3 Kanban](https://github.com/what1f/t3kanban), built on [T3 Code](https://github.com/pingdotgg/t3code).
 
-<p align="center">
-  <a aria-label="Latest release" href="https://github.com/munimtechnologies/mtcode/releases/latest" target="_blank">
-    <img alt="Latest release" src="https://img.shields.io/github/v/release/munimtechnologies/mtcode?filter=munim-v*&style=flat-square&label=Version&labelColor=000000&color=0066CC" />
-  </a>
-  <a aria-label="App is free to use" href="https://github.com/munimtechnologies/mtcode/blob/main/LICENSE" target="_blank">
-    <img alt="License: Apache-2.0" src="https://img.shields.io/badge/License-Apache%202.0-success.svg?style=flat-square&color=33CC12" />
-  </a>
-  <a aria-label="daily active users" href="https://github.com/munimtechnologies/mtcode/blob/main/.github/workflows/download-counts.yml" target="_blank">
-    <img alt="Daily Active Users" src="https://img.shields.io/endpoint?style=flat-square&url=https%3A%2F%2Fraw.githubusercontent.com%2Fmunimtechnologies%2Fmtcode%2Fmain%2F.github%2Fdownload-counts%2Factive-installs.json" />
-  </a>
-  <a aria-label="monthly downloads" href="https://github.com/munimtechnologies/mtcode/releases" target="_blank">
-    <img alt="Monthly Downloads" src="https://img.shields.io/endpoint?style=flat-square&url=https%3A%2F%2Fraw.githubusercontent.com%2Fmunimtechnologies%2Fmtcode%2Fmain%2F.github%2Fdownload-counts%2Fdownloads-monthly.json" />
-  </a>
-  <a aria-label="total downloads" href="https://github.com/munimtechnologies/mtcode/releases" target="_blank">
-    <img alt="Total Downloads" src="https://img.shields.io/endpoint?style=flat-square&url=https%3A%2F%2Fraw.githubusercontent.com%2Fmunimtechnologies%2Fmtcode%2Fmain%2F.github%2Fdownload-counts%2Fdownloads-total.json" />
-  </a>
-</p>
+## Features
 
-<p align="center">
-  <a aria-label="download" href="https://munimtech.com/mtcode"><b>Download MT Code</b></a>
-&ensp;•&ensp;
-  <a aria-label="documentation" href="https://github.com/munimtechnologies/mtcode/tree/main/docs">Read the Documentation</a>
-&ensp;•&ensp;
-  <a aria-label="report issues" href="https://github.com/munimtechnologies/mtcode/issues">Report Issues</a>
-</p>
+- MT Code's current agent workspace and providers, based on commit 63c035c5e5a0cfdcdd4dbabe798cc9efe06f9b93.
+- Kanban and list views, project filtering, search, task creation, image attachments, and provider/model selection.
+- Drag tasks between five columns: To do, In progress, In review, Blocked, Done. Reorder cards and edit tasks through their context menu.
+- Task details alongside the chat on wide screens.
+- Task metadata persisted through MT Code's V2 commands, event log, projections, and client state.
 
-<h6 align="center">Follow Munim Technologies</h6>
-<p align="center">
-  <a aria-label="Follow Munim Technologies on GitHub" href="https://github.com/munimtechnologies" target="_blank">
-    <img alt="Munim Technologies on GitHub" src="https://img.shields.io/badge/GitHub-222222?style=for-the-badge&logo=github&logoColor=white" />
-  </a>&nbsp;
-  <a aria-label="Follow Munim Technologies on LinkedIn" href="https://linkedin.com/in/sheehanmunim" target="_blank">
-    <img alt="Munim Technologies on LinkedIn" src="https://img.shields.io/badge/LinkedIn-0077B5?style=for-the-badge&logo=linkedin&logoColor=white" />
-  </a>&nbsp;
-  <a aria-label="Visit Munim Technologies Website" href="https://munimtech.com" target="_blank">
-    <img alt="Munim Technologies Website" src="https://img.shields.io/badge/Website-0066CC?style=for-the-badge&logo=globe&logoColor=white" />
-  </a>
-</p>
+This is a port of the task workbench, not a wholesale merge of the older Kanban fork. Its custom MCP task toolkit and task notification inbox are not included. MT Code's own agent features remain available. VS Code-style draggable split chat panes are not implemented in this release.
 
-## Introduction
+## Windows
 
-MT Code is a free, open-source desktop app for running and controlling coding agents — Claude Code, Codex, Cursor, Grok Build, OpenCode, and Google Antigravity — from one place. It is [Munim Technologies](https://munimtech.com)' fork of [T3 Code](https://github.com/pingdotgg/t3code) with extra features and fixes, and anyone can download and use it.
+Download the ZIP from Releases, extract it fully, then launch **Start-T3-Mixed.ps1** with PowerShell. If launching from a terminal:
 
-## Download
+```powershell
+powershell.exe -NoProfile -ExecutionPolicy Bypass -File .\Start-T3-Mixed.ps1
+```
 
-**[munimtech.com/mtcode](https://munimtech.com/mtcode)** — or grab installers straight from [GitHub Releases](https://github.com/munimtechnologies/mtcode/releases):
+The launcher uses a separate server home, **%USERPROFILE%\.t3-mixed**, and a separate Electron profile, **%APPDATA%\t3mixed**. It does not import your T3 or Synara chats. Choose a project folder during onboarding and configure your agents. Automatic upstream updates are disabled; install future T3 Mixed releases manually.
 
-- **macOS** (Apple Silicon): `MT-Code-<version>-arm64.dmg`
-- **Windows** (x64): `MT-Code-<version>-x64.exe`
-- **Linux** (x64): `MT-Code-<version>-x86_64.AppImage`, or `MT-Code-<version>-amd64.deb` for Debian and Ubuntu
+The executable and native dependencies come from the pinned MT Code 0.1.28 Windows runtime. Desktop JavaScript, server, and web client are rebuilt here. Windows executable metadata/icon may still identify MT Code. This first release is portable, not a registered Windows installer. BUILD-PROVENANCE.json and SHA256SUMS.txt record the build inputs and checksum.
 
-macOS builds are signed with a Developer ID and notarized by Apple, so they open without a Gatekeeper warning. Windows builds are unsigned: if SmartScreen warns, choose **More info → Run anyway**.
+## Build from source
 
-On Linux, install the `.deb` with `sudo apt install ./MT-Code-*-amd64.deb`, or make the AppImage executable (`chmod +x`) and run it.
+Use Node 24 and pnpm 11.10.0 on Windows x64. Clone the full repository, then:
 
-The app auto-updates from this repository, so you get new MT Code features and fixes as they ship.
+```powershell
+pnpm install --frozen-lockfile --filter @t3tools/web... --filter @t3tools/desktop... --filter t3... --filter @t3tools/scripts... --filter @t3tools/monorepo --filter @t3tools/oxlint-plugin-t3code
+$env:T3CODE_DESKTOP_DISTRO = 'munim'
+pnpm exec vp run build:desktop
+node scripts/build-mixed-windows.mjs
+```
 
-### Use it from a browser or phone
+The packaging script downloads and verifies the pinned runtime, extracts it without executing its installer, and produces release-mixed/T3-Mixed-0.1.0-win-x64.zip. A normal installer build through the upstream packaging scripts additionally requires Visual Studio C++ build tools for native dependencies.
 
-MT Code has no hosted web app of its own. Run the desktop app (or `npx t3@latest`) on your machine and reach it from another device over T3 Connect or your own HTTPS tunnel (Tailscale Serve works well); see [remote access](./docs/user/remote-access.md).
+For development, use an isolated home:
 
-## Before you start
+```powershell
+pnpm exec node scripts/dev-runner.ts dev --home-dir C:\path\to\isolated-mixed-home
+```
 
-MT Code drives agents you already have. Install and sign in to at least one provider CLI:
+## Validation
 
-- Claude: install [Claude Code](https://claude.com/product/claude-code) and run `claude`
-- Codex: install [Codex CLI](https://developers.openai.com/codex/cli) and run `codex login`
-- Cursor: install [Cursor CLI](https://cursor.com/cli) and run `agent login`
-- Grok Build: install [Grok Build CLI](https://x.ai/cli) and run `grok login`
-- OpenCode: install [OpenCode](https://opencode.ai) and run `opencode auth login`
-- Antigravity: enable it in Settings, then use **Install Antigravity** and **Sign in with Google**. No CLI is required.
+```powershell
+pnpm --filter @t3tools/web typecheck
+pnpm --filter @t3tools/desktop typecheck
+pnpm --filter @t3tools/web exec vp test run src/components/tasks --project unit
+pnpm --filter t3 exec vp test run src/orchestration-v2/FoundationPersistence.test.ts -t 'persists Kanban'
+```
 
-Your existing subscriptions are used directly — MT Code sells nothing and adds no accounts of its own.
+The initial build passed 15 task UI/model unit tests, a V2 task persistence/replay test, web and desktop typechecks, and lint on changed TypeScript files (React warnings remain). The upstream server typechecker currently reports pre-existing unused Effect diagnostic directives; these warnings are documented rather than suppressed. A packaged Windows app startup was verified. Automated end-to-end browser verification was blocked by connection errors in the collaborative browser; it is not claimed complete.
 
-Same cost model as T3 Code: the app and its server run on your computer, and model tokens come from Claude / Codex / Cursor / Grok / OpenCode. Munim hosts nothing on your behalf — pairing and Computer Use reach your machine directly. There is no Munim-hosted web app, no model proxy, no Workers AI classifier, and no PlanetScale relay unless you explicitly opt into that paid stack.
+## License and credits
 
-## MT Code vs T3 Code
+See LICENSE (Apache-2.0), LICENSE-MIT, NOTICE, and FORK-CREDITS.md. Original upstream notices are retained. This is an independent community build.
 
-Compared to [T3 Code](https://github.com/pingdotgg/t3code). MT Code started as a fork. Upstream is merged only when you ask an agent to do it — nothing pulls `pingdotgg/t3code` automatically. Some rows started as unmerged upstream PRs that MT Code ships today; others were built here.
-
-This table lists only the differences, roughly in the order of how much they change the app. When T3 Code ships something MT Code had first, MT Code adopts T3 Code's version and drops the row. Recent examples: thread-to-thread messaging, scheduled sends, provider handoff and resume on restart. Apart from the rows T3 Code wins at the bottom, nothing T3 Code ships is missing here.
-
-| Feature                                                                                                                                                                                                      | MT Code |                                                                            T3 Code                                                                            |
-| ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | :-----: | :-----------------------------------------------------------------------------------------------------------------------------------------------------------: |
-| **Computer Use** — agents click, type, screenshot, zoom, hover, and drive browser tabs on your desktop; powered by open-source [munim-computer-use](https://github.com/munimtechnologies/munim-computer-use) |   ✅    |                                                                              ❌                                                                               |
-| **Computer View** — a live remote desktop of the machine a thread runs on, from the chat header; moving over it moves that machine's real cursor, and typing goes where it is focused                        |   ✅    |                                                                              ❌                                                                               |
-| **Agent-chosen computers** — `computer_list` / `computer_send` start a task on another connected machine (this Mac, SSH, T3 Connect, or a paired backend) without changing **Run on**                        |   ✅    |                                                                              ❌                                                                               |
-| **Realtime voice** — a call panel where you speak to the selected agent and it answers out loud; runs through your ChatGPT account (GPT-Live via Codex) or an OpenAI API key                                 |   ✅    |                                                                              ❌                                                                               |
-| **Local sky artwork** — the sidebar header paints your own daylight and weather, and the app icon follows it; ships on by default                                                                            |   ✅    |                                                                              ❌                                                                               |
-| **Voice dictation** — Codex-style mic in the composer (OpenAI or Groq)                                                                                                                                       |   ✅    |                                                                              ❌                                                                               |
-| **Monitor toolkit** — `monitor_start` lets an agent end its turn and be woken by background command output                                                                                                   |   ✅    |                                                                              ❌                                                                               |
-| **Plugin marketplace** — ChatGPT-style Plugins / Apps / MCPs / Skills tabs across Codex, Claude Code, and Cursor, with one-click install and a harness filter                                                |   ✅    |                                                                              ❌                                                                               |
-| **Codex visualizations** rendered inline                                                                                                                                                                     |   ✅    |                                                                              ❌                                                                               |
-| **LaTeX math** in chat                                                                                                                                                                                       |   ✅    |                                                                              ❌                                                                               |
-| **Find in chat and terminal** (Cmd/Ctrl+F) and Mermaid diagrams                                                                                                                                              |   ✅    |                                                                              ❌                                                                               |
-| **Skills manager** — cross-harness skills in Settings                                                                                                                                                        |   ✅    |                                                                              ❌                                                                               |
-| **Multi-machine projects** — copy a checkout to another machine, per-server directory and worktree defaults, branch prefix, `.worktreeinclude`, SSH agent forwarding                                         |   ✅    |                                                                              ❌                                                                               |
-| **Sign in extra Claude/Codex accounts** from Settings without leaving the app                                                                                                                                |   ✅    |                                                                              ❌                                                                               |
-| **Self-hosted Android push** for thread updates                                                                                                                                                              |   ✅    |                                                                              ❌                                                                               |
-| **Script threads from the CLI** — `t3 thread start` and `t3 thread send`                                                                                                                                     |   ✅    |                                                                              ❌                                                                               |
-| **Computer History** — opt-in activity timeline (not screenshots) that agents can reference                                                                                                                  |   ✅    |                                                                              ❌                                                                               |
-| **MT Code theme** — the shipped palette is its own theme (light plus a charcoal-and-blue dark), with T3 Code's stock pair one click away in the library                                                      |   ✅    |                                                                              ❌                                                                               |
-| **Recent-threads switcher** — Ctrl+Tab in the desktop app (browsers reserve Ctrl+Tab; rebind in Settings → Keybindings)                                                                                      |   ✅    |                                                                              ❌                                                                               |
-| **Drag to reorder or hide provider models**                                                                                                                                                                  |   ✅    |                                                                              ❌                                                                               |
-| **Reasoning cycle keybindings**                                                                                                                                                                              |   ✅    |                                                                              ❌                                                                               |
-| **OpenCode context-window usage**                                                                                                                                                                            |   ✅    |                                                                              ❌                                                                               |
-| **OpenCode connected subscription limits** — saved ChatGPT and Claude account windows alongside upstream’s OpenCode Go limits                                                                                |   ✅    |                                                                              ❌                                                                               |
-| **Rename environments**                                                                                                                                                                                      |   ✅    |                                                                              ❌                                                                               |
-| **`t3 .` opens a folder** in the desktop app or a running server                                                                                                                                             |   ✅    |                                                                              ❌                                                                               |
-| **Desktop extras** — thread deep links (`mtcode://`), external terminal apps, login-shell env allowlist, Windows tray with persist-on-close                                                                  |   ✅    |                                                                              ❌                                                                               |
-| **Installs alongside T3 Code** — own bundle ID (`com.munim.mtcode`) and data directory (`~/.mt`)                                                                                                             |   ✅    |                                                                              ❌                                                                               |
-| **Mobile app** — MT Code has no app of its own; T3 Code's app pairs with an MT Code desktop and works with it                                                                                                |   ❌    | ✅ [iOS](https://apps.apple.com/us/app/t3-code-remote-claude-more/id6787819824) · [Android](https://play.google.com/store/apps/details?id=com.t3tools.t3code) |
-| **Hosted web app** — MT Code's own was retired; use T3 Connect or your own tunnel instead                                                                                                                    |   ❌    |                                                            ✅ [app.t3.codes](https://app.t3.codes)                                                            |
-
-Everything else T3 Code does — multi-provider agent control, checkpoints and diffs, remote access from T3 Code's [web](https://app.t3.codes) and mobile apps, Connect tunnels — works here too.
-
-## Documentation
-
-Full docs live in [docs/](./docs):
-
-- [Install and first run](#download) (the inherited [`t3` CLI install guide](./docs/user/install.md) installs upstream T3 Code, not MT Code)
-- [Permission modes](./docs/user/permission-modes.md)
-- [Keyboard shortcuts](./docs/user/keybindings.md)
-- [Desktop notifications](./docs/user/desktop-notifications.md)
-- [Plugins](./docs/user/plugins.md)
-- [Voice dictation](./docs/user/voice-dictation.md)
-- [Attachments](./docs/user/attachments.md)
-- [Project settings](./docs/user/project-settings.md)
-- [Appearance preferences](./docs/user/appearance.md)
-- [Remote access from a phone or another machine](./docs/user/remote-access.md)
-- [Thread messaging](./docs/user/thread-messaging.md)
-- [Continue a thread with another provider](./docs/user/provider-handoff.md)
-- [Sending work to another computer](./docs/user/computer-routing.md)
-- [Viewing a thread's computer](./docs/user/computer-view.md)
-- [Appearance: themes and sidebar artwork](./docs/user/appearance.md)
-- [Connect Claude Code, Codex, ChatGPT and other agents over MCP](./docs/user/outside-agents.md)
-- [Keeping app and server in sync](./docs/user/updating.md)
-- [Source control integrations](./docs/user/source-control.md)
-- Multiple accounts: [Codex](./docs/user/providers-codex.md) · [Claude](./docs/user/providers-claude.md)
-- [Run T3 Code as a background service](./docs/user/background-service.md)
-
-Building from source? Start at [docs/internals/overview.md](./docs/internals/overview.md).
-
-## Relationship to upstream
-
-MT Code does not auto-merge [pingdotgg/t3code](https://github.com/pingdotgg/t3code). Upstream lands only when you explicitly ask an agent to merge it. Features built here are offered upstream as PRs when they fit; some MT Code features started as unmerged upstream PRs we adopted. Bug reports about MT Code builds belong on [this repo's issues](https://github.com/munimtechnologies/mtcode/issues) — please don't file MT Code problems upstream.
-
-MT Code exists because T3 Code is truly open. Credit and thanks to the T3 team.
+A Windows CI template is included at docs/workflows/mixed-windows.yml. Repository Actions are disabled initially: the publishing account token does not have the workflow scope needed to install a new workflow. A maintainer can install the template and enable Actions later.

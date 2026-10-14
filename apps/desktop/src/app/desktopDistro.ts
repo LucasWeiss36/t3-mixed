@@ -49,11 +49,11 @@ export function resolveRuntimeDesktopDistro(input: {
   if (id === "munim") {
     return {
       id,
-      baseName: "MT Code",
-      userDataDirName: input.isDevelopment ? "mt-dev" : "mt",
-      legacyUserDataDirName: input.isDevelopment ? "MT Code (Dev)" : "MT Code (Alpha)",
-      defaultHomeDirName: ".mt",
-      appUserModelId: input.isDevelopment ? "com.munim.mtcode.dev" : "com.munim.mtcode",
+      baseName: "T3 Mixed",
+      userDataDirName: input.isDevelopment ? "t3mixed-dev" : "t3mixed",
+      legacyUserDataDirName: input.isDevelopment ? "T3 Mixed (Dev)" : "T3 Mixed (Alpha)",
+      defaultHomeDirName: ".t3-mixed",
+      appUserModelId: input.isDevelopment ? "com.lucas.t3mixed.dev" : "com.lucas.t3mixed",
       linuxDesktopEntryName: input.isDevelopment ? "mtcode-dev.desktop" : "mtcode.desktop",
       linuxWmClass: input.isDevelopment ? "mtcode-dev" : "mtcode",
     };

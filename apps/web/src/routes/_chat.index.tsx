@@ -1,167 +1,40 @@
-import { RefreshIcon } from "~/components/ui/refresh-icon";
-import { scopeProjectRef } from "@t3tools/client-runtime/environment";
-import { createFileRoute, Link, useRouter } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
 import { LinkIcon, PlusIcon } from "lucide-react";
-import { useEffect, useEffectEvent, useMemo, useRef, useState } from "react";
-
-import { isLocalEnvironmentDisabled } from "../localEnvironment";
-import { isElectron } from "../env";
-import { NoProjectsHero } from "../components/NoProjectsHero";
-import { sortScopedProjectsForSidebar } from "../components/Sidebar.logic";
 import { Button } from "../components/ui/button";
 import { Empty, EmptyDescription, EmptyHeader, EmptyTitle } from "../components/ui/empty";
 import { SidebarInset } from "../components/ui/sidebar";
 import { WorkspacePageHeader } from "../components/WorkspacePageHeader";
-import { useNewThreadHandler } from "../hooks/useHandleNewThread";
-import { useStartComputerThread } from "../hooks/useStartComputerThread";
-import {
-  useAllEnvironmentShellsBootstrapped,
-  useProjects,
-  useThreadShells,
-} from "../state/entities";
+import { TaskBoardPage } from "../components/tasks/TaskBoardPage";
 import { useEnvironments } from "../state/environments";
-import { hasClerkPublicConfig, hasCloudPublicConfig } from "~/cloud/publicConfig";
-import { APP_DISPLAY_NAME } from "~/branding";
+import { APP_BASE_NAME, APP_DISPLAY_NAME } from "~/branding";
+import { hasCloudPublicConfig } from "~/cloud/publicConfig";
 
 function ChatIndexRouteView() {
   const { authGateState } = Route.useRouteContext();
   const { environments, isReady } = useEnvironments();
+  const { project } = Route.useSearch();
 
   if (authGateState.status === "hosted-static") {
     if (!isReady) return null;
     if (environments.length === 0) return <HostedStaticOnboardingState />;
   }
 
-  return <IndexDraftLanding />;
-}
-
-/**
- * Landing on the index route drops straight into a draft. Prefer the most
- * recently active project when one exists; otherwise start on the computer
- * (home directory). The add-project hero is only shown when no environment
- * can host a thread.
- */
-function IndexDraftLanding() {
-  const router = useRouter();
-  // Read at effect time: a deep link can finish navigating before this
-  // index effect is flushed, and the rendered pathname would still be "/".
-  // This page also stays mounted while a navigation away from "/" is still
-  // loading, but the router already points at the new location.
-  const isStillOnIndex = useEffectEvent(() => router.state.location.pathname === "/");
-  const projects = useProjects();
-  const threads = useThreadShells();
-  const bootstrapped = useAllEnvironmentShellsBootstrapped();
-  const handleNewThread = useNewThreadHandler();
-  const startComputerThread = useStartComputerThread();
-  const startingRef = useRef(false);
-  const [startState, setStartState] = useState({ failed: false, retryRequest: 0 });
-
-  const mostRecentProject = useMemo(
-    () =>
-      bootstrapped
-        ? (sortScopedProjectsForSidebar(projects, threads, "updated_at")[0] ?? null)
-        : null,
-    [bootstrapped, projects, threads],
-  );
-
-  useEffect(() => {
-    if (!bootstrapped || startingRef.current) {
-      return;
-    }
-    if (!isStillOnIndex()) {
-      return;
-    }
-    if (mostRecentProject !== null) {
-      startingRef.current = true;
-      void handleNewThread(scopeProjectRef(mostRecentProject.environmentId, mostRecentProject.id), {
-        replace: true,
-      }).catch(() => {
-        startingRef.current = false;
-        setStartState((state) => ({ ...state, failed: true }));
-      });
-      return;
-    }
-    startingRef.current = true;
-    void startComputerThread()
-      .then((started) => {
-        if (!started) {
-          startingRef.current = false;
-        }
-      })
-      .catch(() => {
-        startingRef.current = false;
-        setStartState((state) => ({ ...state, failed: true }));
-      });
-  }, [
-    bootstrapped,
-    handleNewThread,
-    mostRecentProject,
-    startComputerThread,
-    startState.retryRequest,
-  ]);
-
-  if (!bootstrapped) {
-    return null;
-  }
-  if (mostRecentProject !== null) {
-    return startState.failed ? (
-      <DraftStartError
-        onRetry={() => {
-          setStartState((state) => ({
-            failed: false,
-            retryRequest: state.retryRequest + 1,
-          }));
-        }}
-      />
-    ) : null;
-  }
-  // First-run routing to the welcome wizard happens in FirstRunGate at the
-  // root, before this route ever renders.
-  return <NoProjectsHero />;
-}
-
-function DraftStartError({ onRetry }: { readonly onRetry: () => void }) {
-  return (
-    <SidebarInset className="h-dvh min-h-0 overflow-hidden overscroll-y-none">
-      {isElectron ? <WorkspacePageHeader electron /> : null}
-      <Empty className="flex-1">
-        <EmptyHeader className="max-w-md">
-          <EmptyTitle>Couldn’t start a new thread</EmptyTitle>
-          <EmptyDescription>
-            The project is still available. Try opening the draft again.
-          </EmptyDescription>
-          <div className="mt-5 flex justify-center">
-            <Button size="sm" onClick={onRetry}>
-              <RefreshIcon size="md" />
-              Try again
-            </Button>
-          </div>
-        </EmptyHeader>
-      </Empty>
-    </SidebarInset>
-  );
+  return <TaskBoardPage {...(project ? { projectKey: project } : {})} />;
 }
 
 export const Route = createFileRoute("/_chat/")({
+  validateSearch: (search: Record<string, unknown>): { project?: string } =>
+    typeof search.project === "string" ? { project: search.project } : {},
   component: ChatIndexRouteView,
 });
 
 function HostedStaticOnboardingState() {
   const cloudEnabled = hasCloudPublicConfig();
-  const clerkEnabled = hasClerkPublicConfig();
-  const localEnvironmentOff = isLocalEnvironmentDisabled();
-  const description = localEnvironmentOff
-    ? "The local environment is turned off. Connect a remote environment, or turn the local environment back on in Connections."
-    : cloudEnabled
-      ? "Enable MT Connect or T3 Connect on that machine, then open Connections here to sign in with the same account. You can also add the machine using a pairing link."
-      : clerkEnabled
-        ? "Sign in to MT Connect in the sidebar to reach linked machines, or open Connections and add the machine using its pairing link. Computer Use works once an environment is connected."
-        : "Open Connections and add that machine using its pairing link. This browser must be able to reach it.";
 
   return (
-    <SidebarInset className="h-dvh min-h-0 overflow-hidden overscroll-y-none">
+    <SidebarInset className="h-dvh min-h-0 overflow-hidden overscroll-y-none bg-background text-foreground">
       <div className="flex min-h-0 min-w-0 flex-1 flex-col overflow-x-hidden bg-background">
-        <WorkspacePageHeader electron={isElectron} className="border-b border-border">
+        <WorkspacePageHeader className="border-b border-border">
           <div className="flex items-center gap-2">
             <span className="text-sm font-medium text-foreground md:text-muted-foreground/60">
               {APP_DISPLAY_NAME}
@@ -175,12 +48,19 @@ function HostedStaticOnboardingState() {
               <div className="mx-auto mb-5 flex size-11 items-center justify-center rounded-xl border border-border/70 bg-background/70 text-muted-foreground">
                 <LinkIcon className="size-5" />
               </div>
-              <EmptyTitle>Connect to a computer running T3 Code</EmptyTitle>
-              <EmptyDescription>
-                This app connects to T3 Code running on your computer or a server. Start the T3 Code
-                desktop app or command-line server on that machine and keep it running.
+              <EmptyTitle className="text-foreground text-xl">
+                Connect to a computer running {APP_BASE_NAME}
+              </EmptyTitle>
+              <EmptyDescription className="mt-2 text-sm leading-relaxed text-muted-foreground/78">
+                This browser connects to {APP_BASE_NAME} running on your computer or a server. Start
+                the {APP_BASE_NAME} desktop app or command-line server on that machine and keep it
+                running.
               </EmptyDescription>
-              <EmptyDescription>{description}</EmptyDescription>
+              <EmptyDescription className="mt-2 text-sm leading-relaxed text-muted-foreground/78">
+                {cloudEnabled
+                  ? "Enable T3 Connect on that machine, then open Connections here to sign in with the same account. You can also add the machine using a pairing link."
+                  : "Open Connections and add that machine using its pairing link. This browser must be able to reach it."}
+              </EmptyDescription>
               <div className="mt-6 flex justify-center">
                 <Button render={<Link to="/settings/connections" />} size="sm">
                   <PlusIcon className="size-4" />

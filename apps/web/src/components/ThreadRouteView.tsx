@@ -4,6 +4,7 @@ import { useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 
 import ChatView from "./ChatView";
+import { TaskDetailsPanel } from "./tasks/TaskDetailsPanel";
 import { resolveDraftPromotionNavigationTarget, threadHasStarted } from "./ChatView.logic";
 import { waitForDraftHeroTransition } from "./chat/draftHeroTransition";
 import { SidebarInset } from "./ui/sidebar";
@@ -209,7 +210,14 @@ export function ThreadRouteView({ target }: { target: ThreadRouteTarget }) {
 
   return (
     <SidebarInset className="h-svh min-h-0 overflow-hidden overscroll-y-none md:h-dvh">
-      {view}
+      <div className="flex h-full min-h-0 min-w-0 flex-1">
+        <div className="flex min-h-0 min-w-0 flex-1 flex-col">{view}</div>
+        {target.kind === "server" && serverThreadShell?.task ? (
+          <aside className="hidden w-80 shrink-0 overflow-y-auto border-l border-border xl:flex">
+            <TaskDetailsPanel threadRef={target.threadRef} />
+          </aside>
+        ) : null}
+      </div>
     </SidebarInset>
   );
 }
