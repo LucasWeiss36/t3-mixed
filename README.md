@@ -54,6 +54,10 @@ pnpm --filter t3 exec vp test run src/orchestration-v2/FoundationPersistence.tes
 
 The initial build passed 15 task UI/model unit tests, a V2 task persistence/replay test, web and desktop typechecks, and lint on changed TypeScript files (React warnings remain). The upstream server typechecker currently reports pre-existing unused Effect diagnostic directives; these warnings are documented rather than suppressed. A packaged Windows app startup was verified. Automated end-to-end browser verification was blocked by connection errors in the collaborative browser; it is not claimed complete.
 
+## Known integration limitation
+
+The upstream Clerk desktop bridge still registers the shared t3code:// OAuth scheme on Windows startup. T3 Mixed thread links use t3mixed://, but starting both apps may change which app receives shared OAuth/app links. Local agent chats and isolated data directories are unaffected. When keeping original T3 installed, restore its URL handler if needed; do not use shared T3 cloud sign-in links as proof of complete app isolation.
+
 ## License and credits
 
 See LICENSE (Apache-2.0), LICENSE-MIT, NOTICE, and FORK-CREDITS.md. Original upstream notices are retained. This is an independent community build.
