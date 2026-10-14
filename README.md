@@ -50,6 +50,7 @@ pnpm --filter @t3tools/web typecheck
 pnpm --filter @t3tools/desktop typecheck
 pnpm --filter @t3tools/web exec vp test run src/components/tasks --project unit
 pnpm --filter t3 exec vp test run src/orchestration-v2/FoundationPersistence.test.ts -t 'persists Kanban'
+pnpm --filter t3 exec vp test run src/orchestration-v2/ThreadLaunchService.test.ts -t 'Kanban|shared intake preserves durable attachment'
 ```
 
 The task UI/model tests, V2 persistence/replay test, and assigned-task/attachment regressions passed. An integrated browser pass against the built server/client exercised creation, editing, search, board/list views, column changes, Codex execution, chat opening, task details, image upload/editing, archive/unarchive, deletion, and persistence after server restarts. Drag handlers were exercised with browser DOM drag events; physical mouse dragging was not separately verified. File selection used a generated 4×4 PNG fixture. Web and desktop typechecks passed; the server typechecker reports pre-existing unused Effect diagnostic directives (warning exit code), with no TypeScript errors in the changed code. Changed-file lint passed with existing warnings. Other providers, worktree tasks, cloud OAuth, and every inherited MT Code feature are not covered by this pass.

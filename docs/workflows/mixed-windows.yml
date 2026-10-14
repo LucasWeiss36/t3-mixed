@@ -32,6 +32,8 @@ jobs:
         run: pnpm --filter @t3tools/web exec vp test run src/components/tasks --project unit
       - name: Test durable task persistence
         run: pnpm --filter t3 exec vp test run src/orchestration-v2/FoundationPersistence.test.ts -t 'persists Kanban'
+      - name: Test assigned tasks and permanent images
+        run: pnpm --filter t3 exec vp test run src/orchestration-v2/ThreadLaunchService.test.ts -t 'Kanban|shared intake preserves durable attachment'
       - name: Build application
         run: pnpm exec vp run build:desktop
       - name: Package portable Windows application
